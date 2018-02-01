@@ -29,10 +29,14 @@ def fully_connected(inputs, num_outputs,
             x_init = tf.matmul(inputs, V_norm)
             m_init, v_init = tf.nn.moments(x_init, [0])
             scale_init = init_scale / tf.sqrt(v_init + 1e-10)
-            g = tf.get_variable('g', dtype=tf.float32,
-                                initializer=scale_init, trainable=True)
-            b = tf.get_variable('b', dtype=tf.float32,
-                                initializer=tf.zeros_like(m_init), trainable=True)
+            g = tf.get_variable('g', shape=num_outputs, dtype=tf.float32,
+                                initializer=tf.constant_initializer(1.), trainable=True)
+            b = tf.get_variable('b', shape=num_outputs, dtype=tf.float32,
+                                initializer=tf.constant_initializer(0.), trainable=True)
+
+            tf.assign(g, scale_init)
+            tf.assign(b, tf.zeros_like(m_init))
+
             x_init = tf.reshape(
                 scale_init, [1, num_outputs]) * (x_init - tf.reshape(m_init, [1, num_outputs]))
             if activation_fn is not None:
@@ -96,10 +100,13 @@ def conv2d(inputs, num_outputs,
             x_init = tf.nn.conv2d(inputs, V_norm, [1] + stride + [1], padding)
             m_init, v_init = tf.nn.moments(x_init, [0, 1, 2])
             scale_init = init_scale / tf.sqrt(v_init + 1e-8)
-            g = tf.get_variable('g', dtype=tf.float32,
-                                initializer=scale_init, trainable=True)
-            b = tf.get_variable('b', dtype=tf.float32,
-                                initializer=tf.zeros_like(m_init), trainable=True)
+            g = tf.get_variable('g', shape=num_outputs, dtype=tf.float32,
+                                initializer=tf.constant_initializer(1.), trainable=True)
+            b = tf.get_variable('b', shape=num_outputs, dtype=tf.float32,
+                                initializer=tf.constant_initializer(0.), trainable=True)
+            tf.assign(g, scale_init)
+            tf.assign(b, tf.zeros_like(m_init))
+
             x_init = (tf.reshape(scale_init, [1, 1, 1, num_outputs]) *
                       (x_init - tf.reshape(m_init, [1, 1, 1, num_outputs])))
             if activation_fn is not None:
